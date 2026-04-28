@@ -1,0 +1,44 @@
+{
+  "name": "nodejs-instant-api",
+  "version": "1.0.0",
+  "description": "Instant Api",
+  "type": "module",
+  "main": "src/server.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "migrate": "node-pg-migrate",
+    "migrate:up": "node-pg-migrate up",
+    "migrate:down": "node-pg-migrate down",
+    "migrate:create": "node-pg-migrate create"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abdelrahmann22/nodejs-instant-api.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/abdelrahmann22/nodejs-instant-api/issues"
+  },
+  "homepage": "https://github.com/abdelrahmann22/nodejs-instant-api#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-async-handler": "^1.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "nanoid": "^5.1.9",
+    "pg": "^8.20.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "node-pg-migrate": "^8.0.4",
+    "nodemon": "^3.1.14"
+  }
+}
