@@ -309,6 +309,32 @@ const options = {
           },
         },
       },
+      "/bills/merchant": {
+        get: {
+          tags: ["Bills"],
+          summary: "Get all bills for a merchant",
+          parameters: [
+            { name: "merchant_id", in: "query", required: true, schema: { type: "integer" }, description: "Merchant ID" },
+          ],
+          responses: {
+            200: {
+              description: "List of bills",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "array",
+                    items: { $ref: "#/components/schemas/Bill" },
+                  },
+                },
+              },
+            },
+            404: {
+              description: "No bills found for this merchant",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
+            },
+          },
+        },
+      },
     },
   },
   apis: [],
