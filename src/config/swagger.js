@@ -315,3 +315,22 @@ const specs = swaggerJsdoc(options);
 
 export const serveSwagger = swaggerUi.serve;
 export const setupSwagger = swaggerUi.setup(specs);
+
+export const swaggerJson = specs;
+
+export const swaggerCdnHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instant API Docs</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    SwaggerUIBundle({ url: window.location.origin + "/api-docs.json", dom_id: "#swagger-ui" });
+  </script>
+</body>
+</html>`;
