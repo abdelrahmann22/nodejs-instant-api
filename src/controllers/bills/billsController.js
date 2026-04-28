@@ -48,3 +48,20 @@ export const getBill = asyncHandler(async (req, res) => {
 
   res.json(bill);
 });
+
+/**
+ * Handle get bills by merchant request — merchant views all their bills
+ * @param {import('express').Request} req - Express request (query: merchant_id)
+ * @param {import('express').Response} res - Express response
+ */
+export const getBillsByMerchantId = asyncHandler(async (req, res) => {
+  const { merchant_id } = req.query;
+
+  if (!merchant_id) {
+    throw new AppError(400, "Merchant ID is required");
+  }
+
+  const bills = await billService.getBillsByMerchantId(merchant_id);
+
+  res.json(bills);
+});
