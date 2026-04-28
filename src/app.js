@@ -23,7 +23,7 @@ app.use("/auth", authRoutes);
 app.use("/bills", billRoutes);
 app.use("/docs", serveSwagger, setupSwagger);
 
-app.get("/", (req, res) => {
+app.get("/api/v0", (req, res) => {
   res.json({
     status: "Done",
     message: "Server is running",
