@@ -19,11 +19,11 @@ app.use(
 
 app.use(express.json());
 
-app.use("/auth", authRoutes);
-app.use("/bills", billRoutes);
-app.use("/docs", serveSwagger, setupSwagger);
+app.use("/api/auth", authRoutes);
+app.use("/api/bills", billRoutes);
+app.use("/api-docs", serveSwagger, setupSwagger);
 
-app.get("/api/v0", (req, res) => {
+app.get("/", (req, res) => {
   res.json({
     status: "Done",
     message: "Server is running",
