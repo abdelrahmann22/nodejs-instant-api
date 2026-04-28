@@ -1,6 +1,7 @@
 import { nanoid } from "nanoid";
 import AppError from "../../utils/appError.js";
 import * as billRepo from "../../repositories/billRepo.js";
+import * as authRepo from "../../repositories/authRepo.js";
 
 /**
  * Create a new bill — generates token, sets 10min expiry, inserts into DB
@@ -61,4 +62,26 @@ export const getBill = async ({ billId, token }) => {
   const { token: _, merchant_id: __, ...billData } = bill;
 
   return { ...billData, paid_amount, remaining };
+};
+
+/**
+ * Get all bills for a merchant
+ * @param {number} merchantId - Merchant primary key
+ * @returns {Promise<Array<Object>>} Array of bills for the merchant
+ * @throws {AppError} 404 if no bills found
+ */
+export const getBillsByMerchantId = async (merchantId) => {
+  const merchant = await authRepo.findMerchantByID(merchantId);
+
+  if (!merchant) {
+    throw new AppError(404, "Merchant not found");
+  }
+
+  const bills = await billRepo.findBillsByMerchantId(merchantId);
+
+  if (!bills.length) {
+    throw new AppError(404, "No bills found for this merchant");
+  }
+
+  return bills;
 };

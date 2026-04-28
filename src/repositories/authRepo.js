@@ -9,7 +9,12 @@ import pool from "../config/db.js";
  * @param {string} params.stripe_account_id - Stripe Connect account ID
  * @returns {Promise<Object>} The inserted merchant row (id, name, email, stripe_account_id)
  */
-export const insertMerchant = async ({ name, email, password, stripe_account_id }) => {
+export const insertMerchant = async ({
+  name,
+  email,
+  password,
+  stripe_account_id,
+}) => {
   const { rows } = await pool.query(
     `INSERT INTO merchants (name, email, password, stripe_account_id)
      VALUES ($1, $2, $3, $4) RETURNING id, name, email, stripe_account_id`,
@@ -24,7 +29,17 @@ export const insertMerchant = async ({ name, email, password, stripe_account_id 
  * @returns {Promise<Object|null>} The merchant row or null if not found
  */
 export const findMerchantByEmail = async (email) => {
-  const { rows } = await pool.query("SELECT * FROM merchants WHERE email = $1", [email]);
+  const { rows } = await pool.query(
+    "SELECT * FROM merchants WHERE email = $1",
+    [email],
+  );
+  return rows[0] || null;
+};
+
+export const findMerchantByID = async (merchant_id) => {
+  const { rows } = await pool.query("SELECT * FROM merchants WHERE id = $1", [
+    merchant_id,
+  ]);
   return rows[0] || null;
 };
 
@@ -51,6 +66,8 @@ export const insertUser = async ({ username, email, password }) => {
  * @returns {Promise<Object|null>} The user row or null if not found
  */
 export const findUserByEmail = async (email) => {
-  const { rows } = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+  const { rows } = await pool.query("SELECT * FROM users WHERE email = $1", [
+    email,
+  ]);
   return rows[0] || null;
 };

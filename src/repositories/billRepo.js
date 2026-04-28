@@ -53,6 +53,19 @@ export const findBill = async ({ billId, token }) => {
 };
 
 /**
+ * Find all bills for a given merchant
+ * @param {number} merchantId - Merchant primary key
+ * @returns {Promise<Array<Object>>} Array of bill rows
+ */
+export const findBillsByMerchantId = async (merchantId) => {
+  const { rows } = await pool.query(
+    `SELECT * FROM bills WHERE merchant_id = $1 ORDER BY created_at DESC`,
+    [merchantId],
+  );
+  return rows;
+};
+
+/**
  * Calculate total paid amount for a bill from succeeded payments
  * @param {number} billId - Bill primary key
  * @returns {Promise<number>} Sum of succeeded payment amounts (0 if none)
