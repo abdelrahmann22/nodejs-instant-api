@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 
 import authRoutes from "./routes/authRoutes.js";
 import billRoutes from "./routes/billRoutes.js";
-import { serveSwagger, setupSwagger, swaggerJson, swaggerCdnHtml } from "./config/swagger.js";
+import { serveSwagger, setupSwagger } from "./config/swagger.js";
 import AppError from "./utils/appError.js";
 
 dotenv.config();
@@ -22,8 +22,6 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/bills", billRoutes);
 app.use("/api-docs", serveSwagger, setupSwagger);
-app.get("/api-docs.json", (req, res) => res.json(swaggerJson));
-app.get("/docs", (req, res) => res.send(swaggerCdnHtml));
 
 app.get("/", (req, res) => {
   res.json({
