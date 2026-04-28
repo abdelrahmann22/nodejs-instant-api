@@ -10,6 +10,10 @@ const options = {
     },
     servers: [
       {
+        url: "https://nodejs-instant-api.vercel.app",
+        description: "Production",
+      },
+      {
         url: "http://localhost:3000",
         description: "Local development",
       },
