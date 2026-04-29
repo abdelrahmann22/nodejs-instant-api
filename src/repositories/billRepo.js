@@ -72,8 +72,115 @@ export const findBillsByMerchantId = async (merchantId) => {
  */
 export const findPaidAmountByBillId = async (billId) => {
   const { rows } = await pool.query(
+    `SELECT COALESCE(SUM(amount), 0) AS paid_amount FROM payments WHERE bill_id = $1 AND status IN ('succeeded', 'pending')`,
+    [billId],
+  );
+  return parseFloat(rows[0].paid_amount);
+};
+
+/**
+ * Calculate total succeeded amount for a bill (only completed payments)
+ * @param {number} billId - Bill primary key
+ * @returns {Promise<number>} Sum of succeeded payment amounts (0 if none)
+ */
+export const findSucceededAmountByBillId = async (billId) => {
+  const { rows } = await pool.query(
     `SELECT COALESCE(SUM(amount), 0) AS paid_amount FROM payments WHERE bill_id = $1 AND status = 'succeeded'`,
     [billId],
   );
   return parseFloat(rows[0].paid_amount);
+};
+
+/**
+ * Find a bill by ID only (no token required)
+ * @param {number} billId - Bill primary key
+ * @returns {Promise<Object|undefined>} The bill row or undefined if not found
+ */
+export const findBillById = async (billId) => {
+  const { rows } = await pool.query(`SELECT * FROM bills WHERE id = $1`, [
+    billId,
+  ]);
+  return rows[0];
+};
+
+/**
+ * Update bill status (e.g. to "completed" or "expired")
+ * @param {Object} params
+ * @param {number} params.id - Bill primary key
+ * @param {string} params.status - New status
+ * @returns {Promise<Object>} The updated bill row
+ */
+export const updateBillStatus = async ({ id, status }) => {
+  const { rows } = await pool.query(
+    `UPDATE bills SET status = $1::bill_status WHERE id = $2 RETURNING *`,
+    [status, id],
+  );
+  return rows[0];
+};
+
+/**
+ * Mark a bill as transferred with the Stripe transfer ID
+ * @param {Object} params
+ * @param {number} params.id - Bill primary key
+ * @param {string} params.transferId - Stripe transfer ID
+ * @returns {Promise<Object>} The updated bill row
+ */
+export const updateBillTransfer = async ({ id, transferId }) => {
+  const { rows } = await pool.query(
+    `UPDATE bills SET transferred = true, transfer_id = $1 WHERE id = $2 RETURNING *`,
+    [transferId, id],
+  );
+  return rows[0];
+};
+
+/**
+ * Mark a bill as paid if all succeeded payments cover the full amount — runs inside a transaction with row lock
+ * @param {number} billId - Bill primary key
+ * @returns {Promise<{bill: Object, isPaid: boolean}>} The bill row and whether it was marked paid
+ */
+export const markBillPaidIfFullyCovered = async (billId) => {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const { rows: billRows } = await client.query(
+      `SELECT * FROM bills WHERE id = $1 FOR UPDATE`,
+      [billId],
+    );
+    const bill = billRows[0];
+
+    if (!bill) {
+      await client.query("ROLLBACK");
+      return { bill: null, isPaid: false };
+    }
+
+    if (bill.status !== "open") {
+      await client.query("ROLLBACK");
+      return { bill, isPaid: false };
+    }
+
+    const { rows } = await client.query(
+      `SELECT COALESCE(SUM(amount), 0) AS paid_amount FROM payments WHERE bill_id = $1 AND status = 'succeeded'`,
+      [billId],
+    );
+    const succeededAmount = parseFloat(rows[0].paid_amount);
+    const billTotal = parseFloat(bill.amount);
+
+    if (succeededAmount >= billTotal) {
+      await client.query(`UPDATE bills SET status = 'paid' WHERE id = $1`, [
+        billId,
+      ]);
+      bill.status = "paid";
+      await client.query("COMMIT");
+      return { bill, isPaid: true };
+    }
+
+    await client.query("COMMIT");
+    return { bill, isPaid: false };
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
 };
