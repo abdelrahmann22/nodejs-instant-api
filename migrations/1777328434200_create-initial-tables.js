@@ -43,7 +43,7 @@ export const up = (pgm) => {
       references: "merchants(id)",
       onDelete: "RESTRICT",
     },
-    currency: { type: "text", default: "usd" },
+    currency: { type: "text", default: "gbp" },
     amount: { type: "decimal(12, 2)" },
     fees: { type: "decimal(12, 2)" },
     status: { type: "text", default: "open" },
