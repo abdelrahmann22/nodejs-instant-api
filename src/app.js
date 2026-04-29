@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 
 import authRoutes from "./routes/authRoutes.js";
 import billRoutes from "./routes/billRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
+import webhookRoutes from "./routes/webhookRoutes.js";
 import { serveSwagger, setupSwagger } from "./config/swagger.js";
 import AppError from "./utils/appError.js";
 
@@ -17,10 +19,14 @@ app.use(
   }),
 );
 
+app.use("/api/webhooks/stripe", express.raw({ type: "application/json" }));
+
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/bills", billRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/webhooks", webhookRoutes);
 app.use("/api-docs", serveSwagger, setupSwagger);
 
 app.get("/", (req, res) => {
