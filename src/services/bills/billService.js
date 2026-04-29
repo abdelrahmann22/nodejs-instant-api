@@ -9,7 +9,7 @@ import * as authRepo from "../../repositories/authRepo.js";
  * @param {number} params.merchant_id - FK to merchants table
  * @param {number} params.amount - Total bill amount
  * @param {number} [params.fees=0] - Additional fees
- * @param {string} [params.currency="usd"] - Currency code
+ * @param {string} [params.currency="gbp"] - Currency code
  * @param {Array<{title: string, quantity: number, price: number}>} params.items - Bill line items
  * @returns {Promise<Object>} The bill row with qr_url appended
  */
@@ -27,7 +27,7 @@ export const createBill = async ({
     merchant_id,
     amount,
     fees: fees || 0,
-    currency: currency || "usd",
+    currency: currency || "gbp",
     items,
     token,
     expires_at: expires_at,
@@ -52,7 +52,11 @@ export const getBill = async ({ billId, token }) => {
     throw new AppError(404, "Bill not found");
   }
 
-  if (bill.status === "expired" || new Date(bill.expires_at) < new Date()) {
+  if (bill.status === "expired") {
+    throw new AppError(400, "Bill has expired");
+  }
+
+  if (bill.status === "open" && new Date(bill.expires_at) < new Date()) {
     throw new AppError(400, "Bill has expired");
   }
 
