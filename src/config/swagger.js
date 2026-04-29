@@ -1,5 +1,6 @@
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
+
 const options = {
   definition: {
     openapi: "3.0.0",
@@ -101,7 +102,7 @@ const options = {
             merchant_id: { type: "integer", example: 1 },
             amount: { type: "number", example: 30.0 },
             fees: { type: "number", example: 2.5 },
-            currency: { type: "string", example: "usd" },
+            currency: { type: "string", example: "gbp" },
             items: {
               type: "array",
               items: { $ref: "#/components/schemas/BillItem" },
@@ -145,6 +146,35 @@ const options = {
             remaining: { type: "number" },
           },
         },
+        PaymentInitiate: {
+          type: "object",
+          required: ["bill_id", "token", "amount", "user_id"],
+          properties: {
+            bill_id: { type: "integer", example: 1 },
+            token: { type: "string", example: "VcOMwVDw" },
+            amount: { type: "number", example: 15.0 },
+            user_id: { type: "integer", example: 1 },
+          },
+        },
+        PaymentInitiateResponse: {
+          type: "object",
+          properties: {
+            checkout_url: { type: "string", example: "https://checkout.stripe.com/c/pay/cs_test_..." },
+          },
+        },
+        Payment: {
+          type: "object",
+          properties: {
+            id: { type: "integer" },
+            bill_id: { type: "integer" },
+            user_id: { type: "integer" },
+            amount: { type: "string" },
+            payment_intent_id: { type: "string" },
+            status: { type: "string" },
+            created_at: { type: "string", format: "date-time" },
+            paid_at: { type: "string", format: "date-time", nullable: true },
+          },
+        },
         Error: {
           type: "object",
           properties: {
@@ -155,7 +185,7 @@ const options = {
       },
     },
     paths: {
-      "/auth/merchant/signup": {
+      "/api/auth/merchant/signup": {
         post: {
           tags: ["Auth - Merchant"],
           summary: "Register a new merchant",
@@ -179,7 +209,7 @@ const options = {
           },
         },
       },
-      "/auth/merchant/login": {
+      "/api/auth/merchant/login": {
         post: {
           tags: ["Auth - Merchant"],
           summary: "Login as merchant",
@@ -203,7 +233,7 @@ const options = {
           },
         },
       },
-      "/auth/user/signup": {
+      "/api/auth/user/signup": {
         post: {
           tags: ["Auth - User"],
           summary: "Register a new user",
@@ -227,7 +257,7 @@ const options = {
           },
         },
       },
-      "/auth/user/login": {
+      "/api/auth/user/login": {
         post: {
           tags: ["Auth - User"],
           summary: "Login as user",
@@ -251,7 +281,7 @@ const options = {
           },
         },
       },
-      "/bills": {
+      "/api/bills": {
         post: {
           tags: ["Bills"],
           summary: "Create a new bill (Merchant)",
@@ -283,7 +313,7 @@ const options = {
           },
         },
       },
-      "/bills/{id}": {
+      "/api/bills/{id}": {
         get: {
           tags: ["Bills"],
           summary: "Get bill by ID and token (User scans QR)",
@@ -309,7 +339,7 @@ const options = {
           },
         },
       },
-      "/bills/merchant": {
+      "/api/bills/merchant": {
         get: {
           tags: ["Bills"],
           summary: "Get all bills for a merchant",
@@ -330,6 +360,60 @@ const options = {
             },
             404: {
               description: "No bills found for this merchant",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
+            },
+          },
+        },
+      },
+      "/api/payments/initiate": {
+        post: {
+          tags: ["Payments"],
+          summary: "Initiate a split payment on a bill (User)",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/PaymentInitiate" } },
+            },
+          },
+          responses: {
+            200: {
+              description: "Stripe Checkout URL",
+              content: {
+                "application/json": { schema: { $ref: "#/components/schemas/PaymentInitiateResponse" } },
+              },
+            },
+            400: {
+              description: "Validation error (expired, overpayment, etc.)",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
+            },
+            404: {
+              description: "Bill not found",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
+            },
+          },
+        },
+      },
+      "/api/payments/{bill_id}": {
+        get: {
+          tags: ["Payments"],
+          summary: "Get all payments for a bill (Merchant)",
+          parameters: [
+            { name: "bill_id", in: "path", required: true, schema: { type: "integer" }, description: "Bill ID" },
+          ],
+          responses: {
+            200: {
+              description: "List of payments",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "array",
+                    items: { $ref: "#/components/schemas/Payment" },
+                  },
+                },
+              },
+            },
+            404: {
+              description: "No payments found",
               content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
             },
           },
