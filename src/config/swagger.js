@@ -11,7 +11,7 @@ const options = {
     },
     servers: [
       {
-        url: "https://nodejs-instant-api.vercel.app",
+        url: "https://nodejs-instant-api-production.up.railway.app",
         description: "Production",
       },
       {
