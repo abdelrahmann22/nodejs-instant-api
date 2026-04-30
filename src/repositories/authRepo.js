@@ -87,7 +87,7 @@ export const updateMerchantStripeAccountId = async ({
 export const findMerchantByStripeAccountId = async (stripe_account_id) => {
   const { rows } = await pool.query(
     `
-    SELECT * FROM merchants WHERE stripe_account_id = $1,
+    SELECT * FROM merchants WHERE stripe_account_id = $1
     `,
     [stripe_account_id],
   );
