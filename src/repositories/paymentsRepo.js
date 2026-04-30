@@ -47,13 +47,23 @@ export const updatePaymentStatus = async ({ id, status, payment_intent_id }) => 
 };
 
 /**
- * Find all payments for a bill
+ * Find all succeeded payments for a bill with user names
  * @param {number} bill_id - Bill primary key
- * @returns {Promise<Array<Object>>} Array of payment rows
+ * @returns {Promise<Array<Object>>} Array of payment rows with user_name
  */
 export const findPaymentsByBillId = async (bill_id) => {
   const { rows } = await pool.query(
-    `SELECT * FROM payments WHERE bill_id = $1 ORDER BY created_at DESC`,
+    `SELECT
+       p.id,
+       p.amount,
+       p.status,
+       p.paid_at,
+       p.created_at,
+       COALESCE(u.username, u.email, 'Anonymous') as user_name
+     FROM payments p
+     LEFT JOIN users u ON p.user_id = u.id
+     WHERE p.bill_id = $1 AND p.status = 'succeeded'
+     ORDER BY p.paid_at DESC NULLS LAST`,
     [bill_id],
   );
   return rows;

@@ -27,7 +27,7 @@ export const initiatePaymentController = asyncHandler(async (req, res) => {
 });
 
 /**
- * Handle get payments for a bill — returns all payments for the given bill
+ * Handle get payments for a bill — returns all succeeded payments for the given bill with user names
  * @param {import('express').Request} req - Express request (params: bill_id)
  * @param {import('express').Response} res - Express response
  */
@@ -39,10 +39,6 @@ export const getPaymentsByBillId = asyncHandler(async (req, res) => {
   }
 
   const payments = await paymentRepo.findPaymentsByBillId(bill_id);
-
-  if (!payments.length) {
-    throw new AppError(404, "No payments found for this bill");
-  }
 
   res.json(payments);
 });

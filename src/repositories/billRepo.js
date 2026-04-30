@@ -81,6 +81,19 @@ export const findPaidAmountByBillId = async (billId) => {
 };
 
 /**
+ * Count payments (contributors) for a bill — matches findPaidAmountByBillId statuses
+ * @param {number} billId - Bill primary key
+ * @returns {Promise<number>} Count of succeeded + pending payments
+ */
+export const countContributorsByBillId = async (billId) => {
+  const { rows } = await pool.query(
+    `SELECT COUNT(*) AS count FROM payments WHERE bill_id = $1 AND status IN ('succeeded', 'pending')`,
+    [billId],
+  );
+  return parseInt(rows[0].count, 10);
+};
+
+/**
  * Calculate total succeeded amount for a bill (only completed payments)
  * @param {number} billId - Bill primary key
  * @returns {Promise<number>} Sum of succeeded payment amounts (0 if none)
