@@ -1,5 +1,6 @@
 import { Router } from "express";
 import asyncHandler from "express-async-handler";
+import { protect, restrictTo } from "../middlewares/authMiddleware.js";
 import {
   createBill,
   getBill,
@@ -8,8 +9,8 @@ import {
 
 const router = Router();
 
-router.post("/", asyncHandler(createBill));
-router.get("/merchant", asyncHandler(getBillsByMerchantId));
+router.post("/", protect, restrictTo("merchant"), asyncHandler(createBill));
+router.get("/merchant", protect, restrictTo("merchant"), asyncHandler(getBillsByMerchantId));
 router.get("/:id", asyncHandler(getBill));
 
 export default router;
