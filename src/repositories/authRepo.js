@@ -71,3 +71,39 @@ export const findUserByEmail = async (email) => {
   ]);
   return rows[0] || null;
 };
+
+export const updateMerchantStripeAccountId = async ({
+  id,
+  stripe_account_id,
+}) => {
+  const { rows } = await pool.query(
+    `UPDATE merchants SET stripe_account_id = $1 WHERE id = $2 RETURNING id, name, email, stripe_account_id`,
+    [stripe_account_id, id],
+  );
+
+  return rows[0];
+};
+
+export const findMerchantByStripeAccountId = async (stripe_account_id) => {
+  const { rows } = await pool.query(
+    `
+    SELECT * FROM merchants WHERE stripe_account_id = $1,
+    `,
+    [stripe_account_id],
+  );
+
+  return rows[0] || null;
+};
+
+export const updateMerchantOnboarding = async ({
+  id,
+  charges_enabled,
+  details_submitted,
+}) => {
+  const { rows } = await pool.query(
+    `UPDATE merchants SET charges_enabled = $1, details_submitted = $2
+     WHERE id = $3 RETURNING id, name, email, stripe_account_id, charges_enabled, details_submitted`,
+    [charges_enabled, details_submitted, id],
+  );
+  return rows[0];
+};
