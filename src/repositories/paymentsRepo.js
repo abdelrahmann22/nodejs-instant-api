@@ -62,14 +62,14 @@ export const findPaymentsByBillId = async (bill_id) => {
 /**
  * Find all payments for a user with bill and merchant info — used for user activity list
  * @param {number} user_id - User primary key
- * @returns {Promise<Array<Object>>} Array of payment rows with bill_title, bill_amount, currency, bill_status, bill_token, merchant_name, contributors_count
+ * @returns {Promise<Array<Object>>} Array of payment rows with bill_title, bill_token, merchant_name, contributors_count
  */
 export const findPaymentsByUserId = async (user_id) => {
   const { rows } = await pool.query(
     `SELECT
        p.id, p.bill_id, p.amount, p.status, p.paid_at,
        b.title as bill_title,
-       b.amount as bill_amount, b.currency, b.status as bill_status,
+       b.currency,
        b.token as bill_token,
        m.name as merchant_name,
        (SELECT COUNT(*) FROM payments WHERE bill_id = p.bill_id AND status = 'succeeded') as contributors_count
