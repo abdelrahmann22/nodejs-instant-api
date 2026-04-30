@@ -8,7 +8,8 @@ import * as billService from "../../services/bills/billService.js";
  * @param {import('express').Response} res - Express response
  */
 export const createBill = asyncHandler(async (req, res) => {
-  const { amount, fees, currency, items, merchant_id } = req.body;
+  const { amount, fees, currency, items } = req.body;
+  const merchant_id = req.merchant.id;
 
   if (!amount || !items) {
     throw new AppError(400, "amount and items are required");
@@ -55,11 +56,7 @@ export const getBill = asyncHandler(async (req, res) => {
  * @param {import('express').Response} res - Express response
  */
 export const getBillsByMerchantId = asyncHandler(async (req, res) => {
-  const { merchant_id } = req.query;
-
-  if (!merchant_id) {
-    throw new AppError(400, "Merchant ID is required");
-  }
+  const merchant_id = req.merchant.id;
 
   const bills = await billService.getBillsByMerchantId(merchant_id);
 
