@@ -9,10 +9,11 @@ import * as paymentRepo from "../../repositories/paymentsRepo.js";
  * @param {import('express').Response} res - Express response
  */
 export const initiatePaymentController = asyncHandler(async (req, res) => {
-  const { user_id, bill_id, token, amount } = req.body;
+  const { bill_id, token, amount } = req.body;
+  const user_id = req.user.id;
 
-  if (!bill_id || !token || !amount || !user_id) {
-    throw new AppError(400, "bill_id, token, amount, and user_id are required");
+  if (!bill_id || !token || !amount) {
+    throw new AppError(400, "bill_id, token, and amount are required");
   }
 
   const result = await paymentService.initiatePayment({
