@@ -34,17 +34,26 @@ const options = {
             id: { type: "integer" },
             name: { type: "string" },
             email: { type: "string", format: "email" },
-            stripe_account_id: { type: "string" },
+            stripe_account_id: { type: "string", nullable: true },
+            charges_enabled: { type: "boolean" },
+            details_submitted: { type: "boolean" },
           },
         },
         MerchantSignup: {
           type: "object",
-          required: ["email", "password", "stripe_account_id"],
+          required: ["name", "email", "password"],
           properties: {
             name: { type: "string", example: "Acme Corp" },
-            email: { type: "string", format: "email", example: "merchant@test.com" },
-            password: { type: "string", format: "password", example: "pass123" },
-            stripe_account_id: { type: "string", example: "acct_test123" },
+            email: {
+              type: "string",
+              format: "email",
+              example: "merchant@test.com",
+            },
+            password: {
+              type: "string",
+              format: "password",
+              example: "pass123",
+            },
           },
         },
         LoginRequest: {
@@ -75,8 +84,16 @@ const options = {
           required: ["email", "password"],
           properties: {
             username: { type: "string", example: "john" },
-            email: { type: "string", format: "email", example: "user@test.com" },
-            password: { type: "string", format: "password", example: "pass123" },
+            email: {
+              type: "string",
+              format: "email",
+              example: "user@test.com",
+            },
+            password: {
+              type: "string",
+              format: "password",
+              example: "pass123",
+            },
           },
         },
         UserAuthResponse: {
@@ -97,9 +114,8 @@ const options = {
         },
         BillCreate: {
           type: "object",
-          required: ["amount", "items", "merchant_id"],
+          required: ["amount", "items"],
           properties: {
-            merchant_id: { type: "integer", example: 1 },
             amount: { type: "number", example: 30.0 },
             fees: { type: "number", example: 2.5 },
             currency: { type: "string", example: "gbp" },
@@ -148,18 +164,20 @@ const options = {
         },
         PaymentInitiate: {
           type: "object",
-          required: ["bill_id", "token", "amount", "user_id"],
+          required: ["bill_id", "token", "amount"],
           properties: {
             bill_id: { type: "integer", example: 1 },
             token: { type: "string", example: "VcOMwVDw" },
             amount: { type: "number", example: 15.0 },
-            user_id: { type: "integer", example: 1 },
           },
         },
         PaymentInitiateResponse: {
           type: "object",
           properties: {
-            checkout_url: { type: "string", example: "https://checkout.stripe.com/c/pay/cs_test_..." },
+            checkout_url: {
+              type: "string",
+              example: "https://checkout.stripe.com/c/pay/cs_test_...",
+            },
           },
         },
         Payment: {
@@ -192,19 +210,27 @@ const options = {
           requestBody: {
             required: true,
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/MerchantSignup" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/MerchantSignup" },
+              },
             },
           },
           responses: {
             201: {
               description: "Merchant created",
               content: {
-                "application/json": { schema: { $ref: "#/components/schemas/MerchantAuthResponse" } },
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/MerchantAuthResponse" },
+                },
               },
             },
             409: {
               description: "Email already exists",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Error" },
+                },
+              },
             },
           },
         },
@@ -216,19 +242,65 @@ const options = {
           requestBody: {
             required: true,
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/LoginRequest" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/LoginRequest" },
+              },
             },
           },
           responses: {
             200: {
               description: "Login successful",
               content: {
-                "application/json": { schema: { $ref: "#/components/schemas/MerchantAuthResponse" } },
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/MerchantAuthResponse" },
+                },
               },
             },
             401: {
               description: "Invalid credentials",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Error" },
+                },
+              },
+            },
+          },
+        },
+      },
+      "/api/auth/merchant/onboarding-link": {
+        post: {
+          tags: ["Auth - Merchant"],
+          summary: "Get Stripe Connect onboarding link (Merchant)",
+          security: [{ bearerAuth: [] }],
+          responses: {
+            200: {
+              description: "Onboarding URL",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      url: { type: "string", example: "https://connect.stripe.com/setup/e/acct_..." },
+                    },
+                  },
+                },
+              },
+            },
+            401: {
+              description: "Not authenticated",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Error" },
+                },
+              },
+            },
+            403: {
+              description: "Not a merchant",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Error" },
+                },
+              },
             },
           },
         },
@@ -240,19 +312,27 @@ const options = {
           requestBody: {
             required: true,
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/UserSignup" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/UserSignup" },
+              },
             },
           },
           responses: {
             201: {
               description: "User created",
               content: {
-                "application/json": { schema: { $ref: "#/components/schemas/UserAuthResponse" } },
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/UserAuthResponse" },
+                },
               },
             },
             409: {
               description: "Email already exists",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Error" },
+                },
+              },
             },
           },
         },
@@ -264,19 +344,27 @@ const options = {
           requestBody: {
             required: true,
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/LoginRequest" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/LoginRequest" },
+              },
             },
           },
           responses: {
             200: {
               description: "Login successful",
               content: {
-                "application/json": { schema: { $ref: "#/components/schemas/UserAuthResponse" } },
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/UserAuthResponse" },
+                },
               },
             },
             401: {
               description: "Invalid credentials",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Error" },
+                },
+              },
             },
           },
         },
@@ -285,10 +373,13 @@ const options = {
         post: {
           tags: ["Bills"],
           summary: "Create a new bill (Merchant)",
+          security: [{ bearerAuth: [] }],
           requestBody: {
             required: true,
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/BillCreate" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/BillCreate" },
+              },
             },
           },
           responses: {
@@ -308,7 +399,11 @@ const options = {
             },
             400: {
               description: "Validation error",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Error" },
+                },
+              },
             },
           },
         },
@@ -318,23 +413,45 @@ const options = {
           tags: ["Bills"],
           summary: "Get bill by ID and token (User scans QR)",
           parameters: [
-            { name: "id", in: "path", required: true, schema: { type: "integer" }, description: "Bill ID" },
-            { name: "token", in: "query", required: true, schema: { type: "string" }, description: "Bill access token from QR" },
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "integer" },
+              description: "Bill ID",
+            },
+            {
+              name: "token",
+              in: "query",
+              required: true,
+              schema: { type: "string" },
+              description: "Bill access token from QR",
+            },
           ],
           responses: {
             200: {
               description: "Bill details",
               content: {
-                "application/json": { schema: { $ref: "#/components/schemas/BillResponse" } },
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/BillResponse" },
+                },
               },
             },
             400: {
               description: "Bill expired or missing token",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Error" },
+                },
+              },
             },
             404: {
               description: "Bill not found",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Error" },
+                },
+              },
             },
           },
         },
@@ -342,10 +459,8 @@ const options = {
       "/api/bills/merchant": {
         get: {
           tags: ["Bills"],
-          summary: "Get all bills for a merchant",
-          parameters: [
-            { name: "merchant_id", in: "query", required: true, schema: { type: "integer" }, description: "Merchant ID" },
-          ],
+          summary: "Get all bills for a merchant (Merchant)",
+          security: [{ bearerAuth: [] }],
           responses: {
             200: {
               description: "List of bills",
@@ -360,7 +475,11 @@ const options = {
             },
             404: {
               description: "No bills found for this merchant",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Error" },
+                },
+              },
             },
           },
         },
@@ -369,26 +488,41 @@ const options = {
         post: {
           tags: ["Payments"],
           summary: "Initiate a split payment on a bill (User)",
+          security: [{ bearerAuth: [] }],
           requestBody: {
             required: true,
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/PaymentInitiate" } },
+              "application/json": {
+                schema: { $ref: "#/components/schemas/PaymentInitiate" },
+              },
             },
           },
           responses: {
             200: {
               description: "Stripe Checkout URL",
               content: {
-                "application/json": { schema: { $ref: "#/components/schemas/PaymentInitiateResponse" } },
+                "application/json": {
+                  schema: {
+                    $ref: "#/components/schemas/PaymentInitiateResponse",
+                  },
+                },
               },
             },
             400: {
               description: "Validation error (expired, overpayment, etc.)",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Error" },
+                },
+              },
             },
             404: {
               description: "Bill not found",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Error" },
+                },
+              },
             },
           },
         },
@@ -397,8 +531,15 @@ const options = {
         get: {
           tags: ["Payments"],
           summary: "Get all payments for a bill (Merchant)",
+          security: [{ bearerAuth: [] }],
           parameters: [
-            { name: "bill_id", in: "path", required: true, schema: { type: "integer" }, description: "Bill ID" },
+            {
+              name: "bill_id",
+              in: "path",
+              required: true,
+              schema: { type: "integer" },
+              description: "Bill ID",
+            },
           ],
           responses: {
             200: {
@@ -414,7 +555,11 @@ const options = {
             },
             404: {
               description: "No payments found",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Error" },
+                },
+              },
             },
           },
         },
