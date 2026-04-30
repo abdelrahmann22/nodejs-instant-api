@@ -114,8 +114,9 @@ const options = {
         },
         BillCreate: {
           type: "object",
-          required: ["amount", "items"],
+          required: ["amount", "items", "title"],
           properties: {
+            title: { type: "string", example: "Saturday Dinner" },
             amount: { type: "number", example: 30.0 },
             fees: { type: "number", example: 2.5 },
             currency: { type: "string", example: "gbp" },
@@ -130,6 +131,7 @@ const options = {
           properties: {
             id: { type: "integer" },
             merchant_id: { type: "integer" },
+            title: { type: "string" },
             currency: { type: "string" },
             amount: { type: "string" },
             fees: { type: "string" },
@@ -148,6 +150,7 @@ const options = {
           type: "object",
           properties: {
             id: { type: "integer" },
+            title: { type: "string" },
             currency: { type: "string" },
             amount: { type: "string" },
             fees: { type: "string" },
@@ -515,6 +518,56 @@ const options = {
             },
             404: {
               description: "No bills found for this merchant",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Error" },
+                },
+              },
+            },
+          },
+        },
+      },
+      "/api/payments/user": {
+        get: {
+          tags: ["Payments"],
+          summary: "Get user's payment activity list (User)",
+          security: [{ bearerAuth: [] }],
+          responses: {
+            200: {
+              description: "List of user's payments with bill info",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        id: { type: "integer" },
+                        bill_id: { type: "integer" },
+                        bill_title: { type: "string" },
+                        bill_token: { type: "string" },
+                        amount: { type: "string" },
+                        currency: { type: "string" },
+                        status: { type: "string" },
+                        paid_at: { type: "string", format: "date-time", nullable: true },
+                        merchant_name: { type: "string" },
+                        contributors_count: { type: "integer" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            401: {
+              description: "Not authenticated",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Error" },
+                },
+              },
+            },
+            403: {
+              description: "Not a user",
               content: {
                 "application/json": {
                   schema: { $ref: "#/components/schemas/Error" },
