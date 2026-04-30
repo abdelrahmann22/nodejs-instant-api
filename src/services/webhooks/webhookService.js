@@ -132,12 +132,19 @@ const handleCheckoutExpired = async (session) => {
 };
 
 const handleAccountUpdated = async (account) => {
+  console.log(`account.updated fired for ${account.id} — charges_enabled: ${account.charges_enabled}, details_submitted: ${account.details_submitted}`);
+
   const merchant = await authRepo.findMerchantByStripeAccountId(account.id);
-  if (!merchant) return;
+  if (!merchant) {
+    console.error(`No merchant found for Stripe account ${account.id}`);
+    return;
+  }
 
   await authRepo.updateMerchantOnboarding({
     id: merchant.id,
     charges_enabled: account.charges_enabled,
     details_submitted: account.details_submitted,
   });
+
+  console.log(`Merchant ${merchant.id} onboarding updated — charges_enabled: ${account.charges_enabled}, details_submitted: ${account.details_submitted}`);
 };
