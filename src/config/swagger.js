@@ -305,6 +305,46 @@ const options = {
           },
         },
       },
+      "/api/auth/merchant/onboarding-status": {
+        get: {
+          tags: ["Auth - Merchant"],
+          summary: "Check Stripe Connect onboarding status — syncs real-time from Stripe (Merchant)",
+          security: [{ bearerAuth: [] }],
+          responses: {
+            200: {
+              description: "Onboarding status",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      stripe_account_id: { type: "string", nullable: true },
+                      charges_enabled: { type: "boolean" },
+                      details_submitted: { type: "boolean" },
+                    },
+                  },
+                },
+              },
+            },
+            401: {
+              description: "Not authenticated",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Error" },
+                },
+              },
+            },
+            403: {
+              description: "Not a merchant",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Error" },
+                },
+              },
+            },
+          },
+        },
+      },
       "/api/auth/user/signup": {
         post: {
           tags: ["Auth - User"],
