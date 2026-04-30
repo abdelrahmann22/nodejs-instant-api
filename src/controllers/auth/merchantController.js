@@ -91,3 +91,29 @@ export const getOnboardingLink = asyncHandler(async (req, res) => {
 
   res.json({ url: accountLink.url });
 });
+
+export const getOnboardingStatus = asyncHandler(async (req, res) => {
+  const merchant = await authRepo.findMerchantByID(req.merchant.id);
+
+  if (!merchant.stripe_account_id) {
+    return res.json({
+      stripe_account_id: null,
+      charges_enabled: false,
+      details_submitted: false,
+    });
+  }
+
+  const account = await stripe.accounts.retrieve(merchant.stripe_account_id);
+
+  await authRepo.updateMerchantOnboarding({
+    id: merchant.id,
+    charges_enabled: account.charges_enabled,
+    details_submitted: account.details_submitted,
+  });
+
+  res.json({
+    stripe_account_id: account.id,
+    charges_enabled: account.charges_enabled,
+    details_submitted: account.details_submitted,
+  });
+});
