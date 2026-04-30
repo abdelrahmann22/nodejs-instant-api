@@ -43,21 +43,12 @@ export const createBill = async ({
  * @param {string} params.token - Bill access token
  * @returns {Promise<Object>} Bill data with paid_amount and remaining, without token/merchant_id
  * @throws {AppError} 404 if bill not found
- * @throws {AppError} 400 if bill has expired
  */
 export const getBill = async ({ billId, token }) => {
   const bill = await billRepo.findBill({ billId, token });
 
   if (!bill) {
     throw new AppError(404, "Bill not found");
-  }
-
-  if (bill.status === "expired") {
-    throw new AppError(400, "Bill has expired");
-  }
-
-  if (bill.status === "open" && new Date(bill.expires_at) < new Date()) {
-    throw new AppError(400, "Bill has expired");
   }
 
   const paid_amount = await billRepo.findPaidAmountByBillId(billId);
