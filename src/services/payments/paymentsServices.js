@@ -60,8 +60,8 @@ export const initiatePayment = async ({ bill_id, amount, token, user_id }) => {
       payment_id: payment.id.toString(),
       bill_id: bill.id.toString(),
     },
-    success_url: "https://example.com/success",
-    cancel_url: "https://example.com/cancel",
+    success_url: `${process.env.FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}&bill_id=${bill.id}`,
+    cancel_url: `${process.env.FRONTEND_URL}/payment/cancel?bill_id=${bill.id}`,
   });
 
   return { checkout_url: session.url };
