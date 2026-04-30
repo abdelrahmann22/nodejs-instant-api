@@ -1,7 +1,5 @@
-import jwt from "jsonwebtoken";
 import AppError from "../utils/appError.js";
-
-const JWT_SECRET = process.env.JWT_SECRET;
+import { verifyToken } from "../utils/jwt.js";
 
 /**
  * Protect middleware — verifies Bearer JWT token and attaches decoded payload to req.user
@@ -20,7 +18,7 @@ export const protect = (req, res, next) => {
   const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = verifyToken(token);
     req.user = decoded;
     next();
   } catch (err) {
@@ -38,6 +36,11 @@ export const restrictTo = (...roles) => {
     if (!roles.includes(req.user.role)) {
       return next(new AppError(403, "Not authorized for this action"));
     }
+
+    if (req.user.role === "merchant") {
+      req.merchant = req.user;
+    }
+
     next();
   };
 };
