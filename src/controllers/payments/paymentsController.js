@@ -5,7 +5,7 @@ import * as paymentRepo from "../../repositories/paymentsRepo.js";
 
 /**
  * Handle initiate payment request — user pays their share of a bill
- * @param {import('express').Request} req - Express request (body: bill_id, token, amount, user_id)
+ * @param {import('express').Request} req - Express request (body: bill_id, token, amount; user from protect middleware)
  * @param {import('express').Response} res - Express response
  */
 export const initiatePaymentController = asyncHandler(async (req, res) => {
@@ -43,6 +43,19 @@ export const getPaymentsByBillId = asyncHandler(async (req, res) => {
   if (!payments.length) {
     throw new AppError(404, "No payments found for this bill");
   }
+
+  res.json(payments);
+});
+
+/**
+ * Handle get user's payment activity list — returns all payments by the authenticated user with bill info
+ * @param {import('express').Request} req - Express request (user from protect middleware)
+ * @param {import('express').Response} res - Express response
+ */
+export const getPaymentsByUser = asyncHandler(async (req, res) => {
+  const user_id = req.user.id;
+
+  const payments = await paymentRepo.findPaymentsByUserId(user_id);
 
   res.json(payments);
 });
