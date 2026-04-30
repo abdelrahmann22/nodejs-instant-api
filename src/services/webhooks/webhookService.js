@@ -26,6 +26,9 @@ export const handleWebhook = async ({ payload, sig }) => {
     case "checkout.session.expired":
       await handleCheckoutExpired(event.data.object);
       break;
+    case "account.updated":
+      await handleAccountUpdated(event.data.object);
+      break;
   }
 
   return { received: true };
@@ -65,11 +68,16 @@ const handleCheckoutCompleted = async (session) => {
   const merchant = await authRepo.findMerchantByID(bill.merchant_id);
   if (!merchant || !merchant.stripe_account_id) {
     console.error(
-      `Merchant or Stripe account not found for bill ${billId} — bill marked paid but transfer not attempted`,
+      `No Stripe account for bill ${billId} — merchant not onboarded yet`,
     );
     return;
   }
-
+  if (!merchant.charges_enabled || !merchant.details_submitted) {
+    console.error(
+      `Merchant ${merchant.id} not onboarded — transfer skipped, bill stays paid for bill ${billId}`,
+    );
+    return;
+  }
   const billTotal = parseFloat(bill.amount);
 
   try {
@@ -121,4 +129,15 @@ const handleCheckoutExpired = async (session) => {
   });
 
   console.log(`Payment ${paymentId} cancelled — checkout session expired`);
+};
+
+const handleAccountUpdated = async (account) => {
+  const merchant = await authRepo.findMerchantByStripeAccountId(account.id);
+  if (!merchant) return;
+
+  await authRepo.updateMerchantOnboarding({
+    id: merchant.id,
+    charges_enabled: account.charges_enabled,
+    details_submitted: account.details_submitted,
+  });
 };
