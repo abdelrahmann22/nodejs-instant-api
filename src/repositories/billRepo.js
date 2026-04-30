@@ -20,10 +20,11 @@ export const insertBill = async ({
   items,
   token,
   expires_at,
+  title,
 }) => {
   const { rows } = await pool.query(
-    `INSERT INTO bills (merchant_id, amount, fees, currency, items, token, expires_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+    `INSERT INTO bills (merchant_id, amount, fees, currency, items, token, expires_at, title)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
     [
       merchant_id,
       amount,
@@ -32,6 +33,7 @@ export const insertBill = async ({
       JSON.stringify(items),
       token,
       expires_at,
+      title,
     ],
   );
   return rows[0];
