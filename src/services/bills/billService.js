@@ -19,6 +19,7 @@ export const createBill = async ({
   fees,
   currency,
   items,
+  title,
 }) => {
   const token = nanoid(8);
   const expires_at = new Date(Date.now() + 10 * 60 * 1000);
@@ -31,6 +32,7 @@ export const createBill = async ({
     items,
     token,
     expires_at: expires_at,
+    title,
   });
 
   return { ...bill, qr_url: `/bills/${bill.id}?token=${token}` };
