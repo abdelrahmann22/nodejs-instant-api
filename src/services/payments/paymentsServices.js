@@ -5,6 +5,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 import AppError from "../../utils/appError.js";
 import * as billRepo from "../../repositories/billRepo.js";
 import * as paymentRepo from "../../repositories/paymentsRepo.js";
+import { emitPaymentCancelled } from "../realtime/realtimeService.js";
 
 export const initiatePayment = async ({ bill_id, amount, token, user_id }) => {
   const bill = await billRepo.findBill({ billId: bill_id, token });
@@ -64,5 +65,31 @@ export const initiatePayment = async ({ bill_id, amount, token, user_id }) => {
     cancel_url: `${process.env.FRONTEND_APP_URL}/payment/cancel?bill_id=${bill.id}`,
   });
 
-  return { checkout_url: session.url };
+  return { checkout_url: session.url, payment_id: payment.id };
+};
+
+export const cancelPayment = async ({ paymentId, userId }) => {
+  const payment = await paymentRepo.findPaymentById(paymentId);
+
+  if (!payment) {
+    throw new AppError(404, "Payment not found");
+  }
+
+  if (payment.user_id !== userId) {
+    throw new AppError(403, "You can only cancel your own payments");
+  }
+
+  if (payment.status !== "pending") {
+    throw new AppError(400, `Payment is ${payment.status}, cannot cancel`);
+  }
+
+  const cancelled = await paymentRepo.cancelPaymentIfPending(paymentId);
+
+  if (!cancelled) {
+    throw new AppError(400, "Payment could not be cancelled");
+  }
+
+  await emitPaymentCancelled(cancelled.bill_id, cancelled);
+
+  return cancelled;
 };
