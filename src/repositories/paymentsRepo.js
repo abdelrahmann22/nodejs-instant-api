@@ -40,10 +40,42 @@ export const findPaymentById = async (id) => {
 export const updatePaymentStatus = async ({ id, status, payment_intent_id }) => {
   const { rows } = await pool.query(
     `UPDATE payments SET status = $1::payment_status, payment_intent_id = $2, paid_at = CASE WHEN $1::text = 'succeeded' THEN NOW() ELSE NULL END
-     WHERE id = $3 RETURNING *`,
+     WHERE id = $3 AND status = 'pending' RETURNING *`,
     [status, payment_intent_id, id],
   );
   return rows[0];
+};
+
+export const cancelPaymentIfPending = async (paymentId) => {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const { rows } = await client.query(
+      `SELECT status, bill_id FROM payments WHERE id = $1 FOR UPDATE`,
+      [paymentId],
+    );
+
+    const payment = rows[0];
+
+    if (!payment || payment.status !== "pending") {
+      await client.query("ROLLBACK");
+      return null;
+    }
+
+    const { rows: updated } = await client.query(
+      `UPDATE payments SET status = 'cancelled'::payment_status, payment_intent_id = NULL WHERE id = $1 RETURNING *`,
+      [paymentId],
+    );
+
+    await client.query("COMMIT");
+    return updated[0];
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
 };
 
 /**
