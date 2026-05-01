@@ -7,12 +7,14 @@ export const emitPaymentSucceeded = async (billId, payment) => {
 
   const bill = await billRepo.findBillById(billId);
   const paid_amount = await billRepo.findSucceededAmountByBillId(billId);
-  const remaining = parseFloat(bill.amount) - paid_amount;
+  const pending_amount = await billRepo.findPendingAmountByBillId(billId);
+  const remaining = parseFloat(bill.amount) - paid_amount - pending_amount;
 
   const user = await authRepo.findUserById(payment.user_id);
 
   io.to(`bill:${billId}`).emit("payment:succeeded", {
     paid_amount,
+    pending_amount,
     remaining,
     contributor: {
       name: user?.username || "Anonymous",
@@ -25,12 +27,14 @@ export const emitPaymentCancelled = async (billId, payment) => {
   const io = getIO();
 
   const bill = await billRepo.findBillById(billId);
-  const paid_amount = await billRepo.findPaidAmountByBillId(billId);
-  const remaining = parseFloat(bill.amount) - paid_amount;
+  const paid_amount = await billRepo.findSucceededAmountByBillId(billId);
+  const pending_amount = await billRepo.findPendingAmountByBillId(billId);
+  const remaining = parseFloat(bill.amount) - paid_amount - pending_amount;
 
   io.to(`bill:${billId}`).emit("payment:cancelled", {
     payment_id: payment.id,
     paid_amount,
+    pending_amount,
     remaining,
   });
 };
