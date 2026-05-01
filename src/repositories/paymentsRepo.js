@@ -118,8 +118,8 @@ export const findPaymentsByUserId = async (user_id) => {
      FROM payments p
      JOIN bills b ON p.bill_id = b.id
      JOIN merchants m ON b.merchant_id = m.id
-     WHERE p.user_id = $1
-     ORDER BY p.paid_at DESC NULLS LAST`,
+      WHERE p.user_id = $1
+      ORDER BY COALESCE(p.paid_at, p.created_at) DESC`,
     [user_id],
   );
   return rows;
