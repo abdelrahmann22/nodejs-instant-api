@@ -106,6 +106,14 @@ export const findSucceededAmountByBillId = async (billId) => {
   return parseFloat(rows[0].paid_amount);
 };
 
+export const findPendingAmountByBillId = async (billId) => {
+  const { rows } = await pool.query(
+    `SELECT COALESCE(SUM(amount), 0) AS pending_amount FROM payments WHERE bill_id = $1 AND status = 'pending'`,
+    [billId],
+  );
+  return parseFloat(rows[0].pending_amount);
+};
+
 /**
  * Find a bill by ID only (no token required)
  * @param {number} billId - Bill primary key
