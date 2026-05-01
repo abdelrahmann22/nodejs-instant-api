@@ -22,7 +22,7 @@ export const createBill = async ({
   title,
 }) => {
   const token = nanoid(8);
-  const expires_at = new Date(Date.now() + 10 * 60 * 1000);
+  const expires_at = new Date(Date.now() + 10 * 60 * 60 * 1000);
 
   const bill = await billRepo.insertBill({
     merchant_id,
