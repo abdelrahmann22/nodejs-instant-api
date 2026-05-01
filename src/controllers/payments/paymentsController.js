@@ -55,3 +55,19 @@ export const getPaymentsByUser = asyncHandler(async (req, res) => {
 
   res.json(payments);
 });
+
+export const cancelPaymentController = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  if (!id) {
+    throw new AppError(400, "Payment ID is required");
+  }
+
+  const cancelled = await paymentService.cancelPayment({
+    paymentId: Number(id),
+    userId,
+  });
+
+  res.json({ message: "Payment cancelled", payment: cancelled });
+});
