@@ -5,7 +5,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 import AppError from "../../utils/appError.js";
 import * as billRepo from "../../repositories/billRepo.js";
 import * as paymentRepo from "../../repositories/paymentsRepo.js";
-import { emitPaymentCancelled } from "../realtime/realtimeService.js";
+import { emitPaymentCancelled, emitPaymentInitiated } from "../realtime/realtimeService.js";
 
 export const initiatePayment = async ({ bill_id, amount, token, user_id }) => {
   const bill = await billRepo.findBill({ billId: bill_id, token });
@@ -43,6 +43,8 @@ export const initiatePayment = async ({ bill_id, amount, token, user_id }) => {
     user_id,
     amount,
   });
+
+  await emitPaymentInitiated(bill_id, payment);
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
