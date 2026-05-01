@@ -53,13 +53,14 @@ export const getBill = async ({ billId, token }) => {
     throw new AppError(404, "Bill not found");
   }
 
-  const paid_amount = await billRepo.findPaidAmountByBillId(billId);
-  const remaining = parseFloat(bill.amount) - paid_amount;
+  const paid_amount = await billRepo.findSucceededAmountByBillId(billId);
+  const pending_amount = await billRepo.findPendingAmountByBillId(billId);
+  const remaining = parseFloat(bill.amount) - paid_amount - pending_amount;
   const contributors_count = await billRepo.countContributorsByBillId(billId);
 
   const { token: _, merchant_id: __, ...billData } = bill;
 
-  return { ...billData, paid_amount, remaining, contributors_count };
+  return { ...billData, paid_amount, pending_amount, remaining, contributors_count };
 };
 
 /**
@@ -83,10 +84,11 @@ export const getBillsByMerchantId = async (merchantId) => {
 
   const enriched = await Promise.all(
     bills.map(async (bill) => {
-      const paid_amount = await billRepo.findPaidAmountByBillId(bill.id);
-      const remaining = parseFloat(bill.amount) - paid_amount;
+      const paid_amount = await billRepo.findSucceededAmountByBillId(bill.id);
+      const pending_amount = await billRepo.findPendingAmountByBillId(bill.id);
+      const remaining = parseFloat(bill.amount) - paid_amount - pending_amount;
       const contributors_count = await billRepo.countContributorsByBillId(bill.id);
-      return { ...bill, paid_amount, remaining, contributors_count };
+      return { ...bill, paid_amount, pending_amount, remaining, contributors_count };
     }),
   );
 
