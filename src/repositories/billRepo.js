@@ -87,7 +87,7 @@ export const findPaidAmountByBillId = async (billId) => {
  */
 export const countContributorsByBillId = async (billId) => {
   const { rows } = await pool.query(
-    `SELECT COUNT(*) AS count FROM payments WHERE bill_id = $1 AND status IN ('succeeded', 'pending')`,
+    `SELECT COUNT(*) AS count FROM payments WHERE bill_id = $1 AND status = 'succeeded'`,
     [billId],
   );
   return parseInt(rows[0].count, 10);
