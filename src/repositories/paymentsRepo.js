@@ -109,7 +109,7 @@ export const findPaymentsByBillId = async (bill_id) => {
 export const findPaymentsByUserId = async (user_id) => {
   const { rows } = await pool.query(
     `SELECT
-       p.id, p.bill_id, p.amount, p.status, p.paid_at,
+       p.id, p.bill_id, p.amount, p.status, p.paid_at, p.created_at,
        b.title as bill_title,
        b.currency,
        b.token as bill_token,
