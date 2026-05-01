@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import * as paymentRepo from "../../repositories/paymentsRepo.js";
 import * as billRepo from "../../repositories/billRepo.js";
 import * as authRepo from "../../repositories/authRepo.js";
-import { emitPaymentSucceeded, emitBillPaid } from "../realtime/realtimeService.js";
+import { emitPaymentSucceeded, emitBillPaid, emitPaymentCancelled } from "../realtime/realtimeService.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -132,6 +132,8 @@ const handleCheckoutExpired = async (session) => {
     status: "cancelled",
     payment_intent_id: null,
   });
+
+  await emitPaymentCancelled(payment.bill_id, payment);
 
   console.log(`Payment ${paymentId} cancelled — checkout session expired`);
 };
