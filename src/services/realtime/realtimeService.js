@@ -21,6 +21,20 @@ export const emitPaymentSucceeded = async (billId, payment) => {
   });
 };
 
+export const emitPaymentCancelled = async (billId, payment) => {
+  const io = getIO();
+
+  const bill = await billRepo.findBillById(billId);
+  const paid_amount = await billRepo.findPaidAmountByBillId(billId);
+  const remaining = parseFloat(bill.amount) - paid_amount;
+
+  io.to(`bill:${billId}`).emit("payment:cancelled", {
+    payment_id: payment.id,
+    paid_amount,
+    remaining,
+  });
+};
+
 export const emitBillPaid = (billId) => {
   const io = getIO();
 
