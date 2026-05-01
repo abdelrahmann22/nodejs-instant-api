@@ -72,6 +72,14 @@ export const findUserByEmail = async (email) => {
   return rows[0] || null;
 };
 
+export const findUserById = async (id) => {
+  const { rows } = await pool.query(
+    "SELECT id, username, email FROM users WHERE id = $1",
+    [id],
+  );
+  return rows[0] || null;
+};
+
 export const updateMerchantStripeAccountId = async ({
   id,
   stripe_account_id,

@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import * as paymentRepo from "../../repositories/paymentsRepo.js";
 import * as billRepo from "../../repositories/billRepo.js";
 import * as authRepo from "../../repositories/authRepo.js";
+import { emitPaymentSucceeded, emitBillPaid } from "../realtime/realtimeService.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -59,11 +60,15 @@ const handleCheckoutCompleted = async (session) => {
     return;
   }
 
+  await emitPaymentSucceeded(billId, payment);
+
   const { bill, isPaid } = await billRepo.markBillPaidIfFullyCovered(billId);
 
   if (!bill || !isPaid) {
     return;
   }
+
+  emitBillPaid(billId);
 
   const merchant = await authRepo.findMerchantByID(bill.merchant_id);
   if (!merchant || !merchant.stripe_account_id) {
