@@ -206,6 +206,4 @@ The bill stays at `paid` + `transferred=false` — money is safe in the platform
 | `npm run migrate:down` | Rollback last migration |
 | `npm run migrate:create <name>` | Create new migration |
 
-## License
 
-ISC
